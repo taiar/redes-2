@@ -31,11 +31,13 @@ void Servidor::run() {
     int read_size;
     char line[BUFSZ];
 
-    if ((read_size = recvfrom(this->s, line, BUFSZ, 0, (struct sockaddr *) &this->si_other, &this->slen)) == -1) this->logexit("recvfrom()");
-    if (sendto(this->s, line, read_size, 0, (struct sockaddr*) &this->si_other, this->slen) == -1) this->logexit("sendto()");
+    while((read_size = recvfrom(this->s, line, BUFSZ, 0, (struct sockaddr *) &this->si_other, &this->slen)) > 0) {
+      this->parse(line);
+    }
 
+    close(this->s);
+    sleep(1);
   }
-  close(this->r);
 }
 
 void Servidor::logexit(const char *str) {
@@ -105,11 +107,11 @@ void Servidor::dumpTimes() {
 
 void Servidor::shutdown() {
   this->sendToClient("Z");
-  close(this->r);
+  close(this->s);
 }
 
 void Servidor::sendToClient(string s) {
-  send(this->r, (s + "\n").c_str(), (s.size() + 1), 0);
+  sendto(this->s, (s + "\n").c_str(), (s.size() + 1), 0, (struct sockaddr*) &this->si_other, this->slen);
 }
 
 Tempo* Servidor::returnThePosition(unsigned int position) {
