@@ -11,71 +11,36 @@ int main(int argc, char const *argv[]) {
 Servidor::Servidor(int porta) {
   this->porta = porta;
 
-  this->s = socket(AF_INET, SOCK_STREAM, 0);
-  if(s == -1) this->logexit("socket");
+  this->s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if(this->s == -1) this->logexit("socket");
 
-  setsockopt(s, SOL_SOCKET, SO_REUSEADDR, "eth1", 4);
+  this->slen = sizeof(this->si_other);
 
-  struct in_addr addr;
-  if(inet_pton(AF_INET, "127.0.0.1", &addr) < 1) this->logexit("pton");
-  struct sockaddr_in dst;
+  memset((char *) &this->si_me, 0, sizeof(this->si_me));
 
-  dst.sin_family = AF_INET;
-  dst.sin_port = htons(this->porta);
-  dst.sin_addr = addr;
+  this->si_me.sin_family = AF_INET;
+  this->si_me.sin_port = htons(this->porta);
+  this->si_me.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  struct sockaddr *sa_dst = (struct sockaddr *)&dst;
-
-  if(bind(s, sa_dst, sizeof(*sa_dst))) this->logexit("bind");
-  if(listen(s, 0)) this->logexit("listen");
+  if(bind(this->s ,(struct sockaddr*) &this->si_me, sizeof(this->si_me)) == -1) this->logexit("bind");
 }
 
 void Servidor::run() {
   while(1) {
+    fflush(stdout);
     int read_size;
-    struct sockaddr raddr;
-    socklen_t rlen = sizeof(struct sockaddr);
-
-    this->r = accept(this->s, &raddr, &rlen);
-    struct sockaddr_in *raddrptr = (struct sockaddr_in *) &raddr;
     char line[BUFSZ];
 
-    this->fill((struct sockaddr *)raddrptr, line);
+    if ((read_size = recvfrom(this->s, line, BUFSZ, 0, (struct sockaddr *) &this->si_other, &this->slen)) == -1) this->logexit("recvfrom()");
+    if (sendto(this->s, line, read_size, 0, (struct sockaddr*) &this->si_other, this->slen) == -1) this->logexit("sendto()");
 
-    char line2[BUFSZ];
-
-    while((read_size = recv(this->r , line2 , BUFSZ , 0)) > 0) {
-      this->parse(line2);
-    }
-
-    close(this->r);
-    sleep(1);
   }
+  close(this->r);
 }
 
 void Servidor::logexit(const char *str) {
   perror(str);
   exit(EXIT_FAILURE);
-}
-
-void Servidor::fill(const struct sockaddr *addr, char *line) {
-  int version;
-  char str[INET6_ADDRSTRLEN];
-  unsigned short port;
-
-  if(addr->sa_family == AF_INET) {
-    version = 4;
-    struct sockaddr_in *addr4 = (struct sockaddr_in *)addr;
-    if(!inet_ntop(addr4->sin_family, &(addr4->sin_addr), str, INET6_ADDRSTRLEN)) logexit("ntop");
-    port = ntohs(addr4->sin_port);
-  } else {
-    version = 6;
-    struct sockaddr_in6 *addr6 = (struct sockaddr_in6 *)addr;
-    if(!inet_ntop(addr6->sin6_family, &(addr6->sin6_addr), str, INET6_ADDRSTRLEN)) logexit("ntop");
-    port = ntohs(addr6->sin6_port);
-  }
-
-  sprintf(line, "IPv%d %s %hu\n", version, str, port);
 }
 
 void Servidor::parse(char msg[]) {

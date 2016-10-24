@@ -36,6 +36,9 @@ private:
   int porta;
   int s;
   int r;
+  unsigned int slen;
+  struct sockaddr_in si_me;
+  struct sockaddr_in si_other;
   std::vector<Tempo*> tempos;
   Tempo* returnThePosition(unsigned int);
 };
