@@ -14,38 +14,36 @@ void logexit(const char *str) {
 }
 
 int main(int argc, char *argv[]) {
+  struct sockaddr_in si_other;
   int s;
-  s = socket(AF_INET, SOCK_STREAM, 0);
-  if(s == -1) logexit("socket");
+  unsigned int slen = sizeof(si_other);
 
-  struct in_addr addr;
-  if(inet_pton(AF_INET, argv[1], &addr) < 1) logexit("pton");
+  if((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) logexit("socket");
 
-  struct sockaddr_in dst;
+  memset((char *) &si_other, 0, sizeof(si_other));
+  si_other.sin_family = AF_INET;
+  si_other.sin_port = htons(atoi(argv[2]));
 
-  dst.sin_family = AF_INET;
-  dst.sin_port = htons(atoi(argv[2]));
-  dst.sin_addr = addr;
-
-  struct sockaddr *sa_dst = (struct sockaddr *)&dst;
-
-  if(connect(s, sa_dst, sizeof(*sa_dst))) logexit("connect");
-
-  char line[BUFSZ] = "";
+  if(inet_aton(argv[1], &si_other.sin_addr) == 0) {
+    fprintf(stderr, "inet_aton() failed\n");
+    exit(1);
+  }
 
   while(1) {
-    char line2[BUFSZ] = "";
-    fgets(line, BUFSZ, stdin);
+    char buf[BUFSZ];
+    char message[BUFSZ];
 
-    if( send(s , line , BUFSZ , 0) < 0) return 1;
-    if( recv(s , line2 , BUFSZ , 0) < 0) break;
+    fgets(message, BUFSZ, stdin);
 
-    if(strcmp(line2, "Z\n") == 0)
+    if (sendto(s, message, BUFSZ, 0 , (struct sockaddr *) &si_other, slen) < 0) return 1;
+    if (recvfrom(s, buf, BUFSZ, 0, (struct sockaddr *) &si_other, &slen) < 0) break;
+
+    if(strcmp(buf, "Z\n") == 0)
       break;
-    else if(strcmp(line2, "O\n") == 0 || strcmp(line2, "D\n") == 0 || strcmp(line2, "C\n") == 0)
+    else if(strcmp(buf, "O\n") == 0 || strcmp(buf, "D\n") == 0 || strcmp(buf, "C\n") == 0)
       continue;
     else {
-      printf("%s", line2);
+      printf("%s", buf);
       continue;
     }
   }
