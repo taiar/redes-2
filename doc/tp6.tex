@@ -18,8 +18,8 @@
 
 \sloppy
 
-\title{Redes de Computadores \\ Trabalho Prático 1 \\
-\huge{Cliente e servidor em Sockets}}
+\title{Redes de Computadores \\ Trabalho Prático 2 \\
+\huge{Protocolo Olímpico com UDP}}
 \date{November 22, 1963}
 
 
@@ -38,12 +38,12 @@
 
 \begin{resumo}
 O problema tratado nesse trabalho é o de comunicação entre softwares cliente e
-servidor através de sockets em redes de computadores. Para isso, foi definido um
-protocolo de comunicação para um problema bem específico: coletar tempos de
-atletas das olimpíadas e retornar em ordem de chegada ou individualmente (quando
-passado o parâmetro da colocação do atleta). Foi feita a implementação dos dois
-programas (cliente e servidor) de forma modularizada e um Makefile para orientar
-a compilação do projeto.
+servidor através utilizando o protocolo UDP e redes de computadores.
+Para isso, foi definido um protocolo de comunicação para um problema bem
+específico: coletar tempos de atletas das olimpíadas e retornar em ordem de
+chegada ou individualmente (quando passado o parâmetro da colocação do atleta).
+Foi feita a implementação dos dois programas (cliente e servidor) de forma
+modularizada e um Makefile para orientar a compilação do projeto.
 \end{resumo}
 
 \section{Implementação}
@@ -215,10 +215,13 @@ O cabeçalho da classe Servidor é fornecido a seguir:
 \subsection{Implementação do software cliente}
 
 Apesar de ter a extensão $.cpp$ o código do cliente não é modularizado e está
-escrito em C mesmo. Eu basicamente utilizei o exemplo mostrado pelo monitor
-com algumas partes do exemplo publicado no Moodle e implementei o trecho de
-comunicação com o servidor para que tudo funcionasse bem. O maior foco do
-trabalho foi, com certeza, no software servidor.
+escrito em C mesmo. Eu basicamente utilizei um exemplo retirado da internet
+e implementei o trecho de comunicação com o servidor para que tudo funcionasse
+bem. O maior foco do trabalho foi, com certeza, no software servidor.
+
+Infelizmente o meu software cliente não está funcional a tempo hábil da entrega
+do trabalho e forma que os testes que eu efetuei foram utilizando o software
+$nc$ ou $netcat$. Exemplificarei na sessão de testes.
 
 \subsection{Decisões de implementação}
 
@@ -247,12 +250,6 @@ Esta implementação fica claro no software cliente neste trecho:
   }
 \end{verbatim}
 
-\section{IPv4 e IPv6}
-
-Para fazer funcionar em ambos protocolos, eu me baseei no exemplo de código
-enviado no Moodle. Eu implementei no servidor o método $Servidor::fill$ para
-que ele utilize corretamente o protocolo de acordo com o que o cliente tente se
-conectar.
 
 \section{Testes}
 Segue alguns testes efetuados mostrando várias conexões não-simultâneas de
@@ -260,60 +257,42 @@ clientes ao servidor. A execução do servidor será omitida visto que ele não
 faz qualquer output durante o seu funcionamento.
 
 \begin{verbatim}
-  ~ src git:(master) ./cliente 127.0.0.1 1234
+  doc git:(master) nc -u 127.0.0.1 1234
   D 1h
-  D 61m
+  D
+  D 1h 1m
+  D
   D 1m 1h 1ms
+  D
   O
+  0h 0m 0s 0ms
   1h 0m 0s 0ms
-  0h 61m 0s 0ms
-  1h 1m 0s 1ms
+  1h 1m 0s 0ms
   D 2h
+  D
   O
+  0h 0m 0s 0ms
+  0h 0m 0s 0ms
   1h 0m 0s 0ms
-  0h 61m 0s 0ms
-  1h 1m 0s 1ms
-  2h 0m 0s 0ms
+  1h 1m 0s 0ms
   C 2
-  0h 61m 0s 0ms
-  C 7
-  C 0
-  C -1
-  C 1
+  0h 0m 0s 0ms
+  C 3
   1h 0m 0s 0ms
-  C 4
-  2h 0m 0s 0ms
-  O
-  1h 0m 0s 0ms
-  0h 61m 0s 0ms
-  1h 1m 0s 1ms
-  2h 0m 0s 0ms
   Z
-  ~  src git:(master) ./cliente 127.0.0.1 1234
-  O
-  1h 0m 0s 0ms
-  0h 61m 0s 0ms
-  1h 1m 0s 1ms
-  2h 0m 0s 0ms
-  D 22m
-  O
-  0h 22m 0s 0ms
-  1h 0m 0s 0ms
-  0h 61m 0s 0ms
-  1h 1m 0s 1ms
-  2h 0m 0s 0ms
   Z
-  ~  src git:(master)
+
+  doc git:(master)
 \end{verbatim}
 
 \section{Conclusão}
 
-Eu gostei de trabalhar na implementação deste trabalho. Já tinha programado em
-redes mas com linguagens mais alto nível (basicamente em Ruby) e ver como
-funciona a implementação de trocas de mensagem foi bem interessante.
+É visível que o trabalho contém alguns bugs mas creio que faltou pouca coisa
+pra que eu conseguisse terminá-lo corretamente. Eu aproveitei grande parte do
+que havia produzido do primeiro trabalho e adaptei para o protocolo UDP.
 
-Acredito que tenha acertado na modularização do meu trabalho visto que posso
-aproveitar a arquitetura produzida para os próximos trabalhos que seguirem a
-mesma linha de problema.
+Espero ir bem melhor no terceiro trabalho.
+
+Obrigado!
 
 \end{document}
